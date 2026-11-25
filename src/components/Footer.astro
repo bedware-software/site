@@ -1,0 +1,27 @@
+---
+import logo from '../assets/brand/bedware-software.svg?raw';
+import { apps } from '../lib/apps';
+const mark = logo.replace(/ width="\d+" height="\d+"/, '');
+---
+<footer class="foot" data-theme="dark">
+  <div class="wrap foot__row">
+    <a class="foot__logo" href="/" aria-label="bedware software — home" set:html={mark} />
+    <div class="foot__cols">
+      <div>
+        <p class="foot__h">Products</p>
+        <ul>{apps.map((a) => <li><a href={`/${a.slug}/`}>{a.name}</a></li>)}</ul>
+      </div>
+      <div>
+        <p class="foot__h">Source</p>
+        <ul>
+          <li><a href="https://github.com/bedware-software">GitHub</a></li>
+          {apps.map((a) => <li><a href={`${a.repo}/releases`}>{a.name} releases</a></li>)}
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="wrap foot__base">
+    <span>© {new Date().getFullYear()} bedware software</span>
+    <span>Free and open source</span>
+  </div>
+</footer>

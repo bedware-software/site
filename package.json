@@ -1,0 +1,24 @@
+{
+  "name": "bedware-site",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sync": "node scripts/sync.mjs",
+    "dev": "node scripts/sync.mjs && astro dev",
+    "build": "node scripts/sync.mjs && astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "brand": "node scripts/brand.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@bedware/ui": "https://github.com/bedware-software/bedware-design/releases/download/ui-v0.5.0/bedware-ui-0.5.0.tgz",
+    "astro": "^7.4.13"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "typescript": "^6.0.3"
+  }
+}

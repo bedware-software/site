@@ -1,0 +1,113 @@
+---
+import { Image } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import Shot from '../components/Shot.astro';
+import Downloads from '../components/Downloads.astro';
+import backdrop from '../assets/brand/backdrop.png';
+import { apps, pad, type App } from '../lib/apps';
+
+export function getStaticPaths() {
+  return apps.map((app) => ({ params: { app: app.slug }, props: { app } }));
+}
+
+const { app } = Astro.props as { app: App };
+const other = apps.filter((a) => a.slug !== app.slug);
+const svg = (s: string) => s.replace(/ width="\d+" height="\d+"/, '');
+const id = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+// The header shows the app's best frame (as on the home page); the tour below has them all.
+const lead = app.features.find((f) => f.image === app.homeShot) ?? app.features[0];
+---
+<Base title={app.name} description={app.summary} current={app.slug}>
+  {/* The same backdrop as the home page: black with the code rain, or white with it inverted. */}
+  <section class="phero">
+    <Image class="hero__bg" src={backdrop} alt="" widths={[800, 1285]} sizes="100vw" loading="eager" />
+    <div class="wrap phero__grid">
+      <div class="phero__text">
+        <p class="phero__kicker"><span class="bw-tag">{app.kicker}</span></p>
+        <h1 class="phero__title">
+          <Image src={app.icon} alt="" width={72} height={72} />
+          <span class="phero__name phero__name--dark" set:html={svg(app.logo)} />
+          <span class="phero__name phero__name--light" set:html={svg(app.logoLight)} />
+          <span class="sr">{app.name}</span>
+        </h1>
+        {app.intro.map((p) => <p class="phero__intro" set:html={p} />)}
+        <Downloads app={app} />
+      </div>
+      {lead && (
+        <div class="phero__media">
+          <Shot src={app.shots[lead.image]} light={app.shots[`light/${lead.image}`]} alt={lead.alt} sizes="(min-width: 1100px) 640px, 100vw" eager />
+        </div>
+      )}
+    </div>
+  </section>
+
+  {app.highlights.length > 0 && (
+    <section class="highlights" aria-label="Highlights">
+      <div class="wrap">
+        <ol class="highlights__list">
+          {app.highlights.map((h, i) => (
+            <li><span class="highlights__n">{pad(i + 1)}</span><p set:html={h} /></li>
+          ))}
+        </ol>
+      </div>
+    </section>
+  )}
+
+  {app.features.length > 0 && (
+    <section class="tour" aria-labelledby="tour">
+      <div class="wrap tour__layout">
+        <aside class="tour__nav">
+          <h2 class="section-h bw-section-title__text" id="tour">Feature tour</h2>
+          <ol>
+            {app.features.map((f, i) => <li><a href={`#${id(f.title)}`}><span>{pad(i + 1)}</span>{f.title}</a></li>)}
+          </ol>
+        </aside>
+        <div class="tour__items">
+          {app.features.map((f, i) => (
+            <article class="feature" id={id(f.title)}>
+              <header class="bw-panel__head feature__head" data-n={pad(i + 1)}>
+                <h3 class="bw-panel__title">{f.title}</h3>
+              </header>
+              <div class="feature__body">
+                {f.html.map((p) => <p set:html={p} />)}
+              </div>
+              {/* Every feature keeps its frame, the first one too, though the page header repeats it. */}
+              <Shot class="feature__shot" src={app.shots[f.image]} light={app.shots[`light/${f.image}`]} alt={f.alt} sizes="(min-width: 1100px) 780px, 100vw" />
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <script>
+    // Mark the tour entry being read: the last one whose top has passed just under the header.
+    const links = [...document.querySelectorAll<HTMLAnchorElement>('.tour__nav a')];
+    const items = links.map((a) => document.getElementById(a.hash.slice(1))!);
+    let queued = false;
+    const mark = () => {
+      queued = false;
+      let on = -1;
+      items.forEach((el, i) => { if (el && el.getBoundingClientRect().top <= 120) on = i; });
+      links.forEach((a, i) => a.classList.toggle('is-on', i === on));
+    };
+    addEventListener('scroll', () => { if (!queued) { queued = true; requestAnimationFrame(mark); } }, { passive: true });
+    mark();
+  </script>
+
+  <section class="cta" data-theme="dark">
+    <div class="wrap cta__grid">
+      <div>
+        <h2 class="cta__h">Get {app.name}</h2>
+        <p class="cta__p">{app.summary}</p>
+        <Downloads app={app} compact />
+      </div>
+      {other.map((o) => (
+        <a class="cta__other" href={`/${o.slug}/`}>
+          <Image src={o.icon} alt="" width={48} height={48} />
+          <span><small>Also from <span class="lc">bedware</span></small><b>{o.name}</b><em>{o.summary}</em></span>
+        </a>
+      ))}
+    </div>
+  </section>
+</Base>

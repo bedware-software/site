@@ -1,0 +1,108 @@
+---
+import '@bedware/ui/fonts.css';
+import '@bedware/ui/tokens.css';
+import '@bedware/ui/styles.css';
+import '../styles/site.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import ReviewBar from '../components/ReviewBar.astro';
+
+interface Props { title?: string; description: string; current?: string }
+const { title, description, current } = Astro.props;
+const full = title ? `${title} · bedware software` : 'bedware software';
+---
+<!doctype html>
+<html lang="en" data-theme="dark" data-scheme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{full}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={full} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta name="theme-color" content="#000000" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site)} />
+    <script is:inline>
+      // Theme: dark (the brand's default), light or system. data-scheme is the theme actually shown.
+      (() => {
+        const root = document.documentElement;
+        let t = 'dark';
+        try { t = localStorage.getItem('bw-theme') || 'dark'; } catch {}
+        if (!['dark', 'light', 'system'].includes(t)) t = 'dark';
+        const mq = matchMedia('(prefers-color-scheme: light)');
+        const apply = () => { root.dataset.theme = t; root.dataset.scheme = t === 'system' ? (mq.matches ? 'light' : 'dark') : t; };
+        apply();
+        mq.addEventListener('change', apply);
+        window.bwSetTheme = (v) => { t = v; try { localStorage.setItem('bw-theme', v); } catch {} apply(); };
+      })();
+    </script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <Header current={current} />
+    <main id="main"><slot /></main>
+    <Footer />
+    <ReviewBar />
+    <dialog class="zoom" id="zoom" aria-label="Screenshot">
+      <button class="bw-btn bw-btn--secondary zoom__close" type="button" data-close>Close <kbd class="bw-kbd">esc</kbd></button>
+      <img alt="" />
+    </dialog>
+    <script>
+      // Theme switch: dark, light, system; the choice is remembered.
+      const root = document.documentElement;
+      const opts = [...document.querySelectorAll<HTMLButtonElement>('[data-theme-set]')];
+      // A radio group: one tab stop, arrow keys move and choose.
+      const sync = () => opts.forEach((b) => {
+        const on = b.dataset.themeSet === root.dataset.theme;
+        b.setAttribute('aria-checked', String(on));
+        b.tabIndex = on ? 0 : -1;
+      });
+      const choose = (b: HTMLButtonElement) => { (window as any).bwSetTheme(b.dataset.themeSet); sync(); };
+      opts.forEach((b, i) => {
+        b.addEventListener('click', () => choose(b));
+        b.addEventListener('keydown', (e) => {
+          const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+          if (!step) return;
+          e.preventDefault();
+          const next = opts[(i + step + opts.length) % opts.length];
+          choose(next);
+          next.focus();
+        });
+      });
+      sync();
+
+      // Screenshots open full size.
+      const dlg = document.getElementById('zoom') as HTMLDialogElement;
+      const big = dlg.querySelector('img')!;
+      for (const a of document.querySelectorAll<HTMLAnchorElement>('a[data-zoom]')) {
+        a.addEventListener('click', (e) => {
+          // On a phone the browser's own image view (pinch to zoom) is better than a dialog.
+          if (e.metaKey || e.ctrlKey || e.shiftKey || matchMedia('(max-width: 700px)').matches) return;
+          e.preventDefault();
+          big.src = a.href;
+          big.alt = a.querySelector('img')?.alt ?? '';
+          dlg.showModal();
+        });
+      }
+      // A click anywhere closes it: the backdrop, the picture (its cursor says zoom out) or Close.
+      dlg.addEventListener('click', (e) => { if (e.target === dlg || e.target === big || (e.target as Element).closest('[data-close]')) dlg.close(); });
+
+      // Put the visitor's own platform first.
+      const ua = navigator.userAgent;
+      const mobile = /iPhone|iPad|iPod|Android/.test(ua) || (/Mac/.test(ua) && navigator.maxTouchPoints > 1);
+      const os = mobile ? null : /Mac/.test(ua) ? 'mac' : /Win/.test(ua) ? 'windows' : /Linux|X11/.test(ua) && !/Android/.test(ua) ? 'linux' : null;
+      if (os) {
+        for (const box of document.querySelectorAll<HTMLElement>('[data-downloads]')) {
+          const pick = box.querySelector<HTMLAnchorElement>(`[data-installer^="${os}"]`);
+          const main = box.querySelector<HTMLAnchorElement>('[data-primary]');
+          if (!pick || !main) continue;
+          main.href = pick.href;
+          main.querySelector('[data-label]')!.textContent = `Download for ${pick.dataset.os}`;
+          pick.setAttribute('aria-current', 'true');
+        }
+      }
+    </script>
+  </body>
+</html>

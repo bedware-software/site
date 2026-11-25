@@ -1,0 +1,32 @@
+---
+import { apps } from '../lib/apps';
+interface Props { current?: string }
+const { current } = Astro.props;
+const themes = [
+  { v: 'dark', label: 'Dark theme', icon: '<path d="M10.5 2.5a5.5 5.5 0 1 0 3 9.9A6 6 0 0 1 10.5 2.5z" fill="currentColor"/>' },
+  { v: 'light', label: 'Light theme', icon: '<path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6 13 13M3 13l1.4-1.4M11.6 4.4 13 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/><rect x="5" y="5" width="6" height="6" fill="currentColor"/>' },
+  { v: 'system', label: 'System theme', icon: '<rect x="1.75" y="2.75" width="12.5" height="8.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M5 14h6M8 11.5V14" stroke="currentColor" stroke-width="1.5"/>' },
+];
+---
+<header class="top">
+  <div class="wrap top__row">
+    <a class="top__logo" href="/" aria-label="bedware software — home">
+      <span class="brand brand--plate">bedware<span>.software</span></span>
+    </a>
+    <nav class="top__nav" aria-label="Products">
+      {apps.map((a) => (
+        <a href={`/${a.slug}/`} aria-current={current === a.slug ? 'page' : undefined}>{a.name}</a>
+      ))}
+    </nav>
+    <div class="top__side">
+      <a class="bw-btn bw-btn--ghost top__gh" href="https://github.com/bedware-software">GitHub</a>
+      <div class="bw-seg bw-seg--sm top__theme" role="radiogroup" aria-label="Theme">
+        {themes.map((t) => (
+          <button class="bw-seg__opt" type="button" role="radio" aria-checked="false" data-theme-set={t.v} aria-label={t.label} title={t.label}>
+            <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true" set:html={t.icon} />
+          </button>
+        ))}
+      </div>
+    </div>
+  </div>
+</header>

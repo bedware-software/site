@@ -1,0 +1,12 @@
+---
+// One option of an open design question (see src/lib/review.ts).
+import { question, reviewing } from '../lib/review';
+interface Props { q: string; opt: string }
+const { q, opt } = Astro.props;
+const current = question(q).current === opt;
+---
+{(reviewing || current) && (
+  <div class:list={['alt', { 'is-on': current }]} data-alt={q} data-opt={opt}>
+    <slot />
+  </div>
+)}

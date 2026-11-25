@@ -1,0 +1,119 @@
+---
+import { Image } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import Shot from '../components/Shot.astro';
+import Downloads from '../components/Downloads.astro';
+import poster from '../assets/brand/bedware-software.svg?raw';
+import backdrop from '../assets/brand/backdrop.png';
+import robot from '../assets/brand/robot.png';
+import lightPlates from '../assets/brand/logo-light-plates.svg?raw';
+import { apps, pad } from '../lib/apps';
+
+const mark = poster.replace(/ width="\d+" height="\d+"/, '');
+const svg = (s: string) => s.replace(/ width="\d+" height="\d+"/, '');
+
+const principles = [
+  { t: 'Keyboard first', d: 'Every action has a key. Labels, modes and hint bars show you which one, so the mouse becomes optional rather than required.' },
+  { t: 'Yours to read', d: 'Both apps are open source on GitHub. Releases are built in public by GitHub Actions, and settings are plain files you can sync and back up.' },
+  { t: 'One system', d: 'Runwa and Vimperium share one design system and one set of components, so the same keys and the same plates mean the same thing in both.' },
+];
+---
+<Base description="bedware software makes keyboard-first desktop tools: Runwa, a command palette for Windows and macOS, and Vimperium, a browser driven by Vim keys.">
+  {/* Black with the code rain in the dark theme; white with the rain inverted in the light one. */}
+  <section class="hero">
+    <Image class="hero__bg" src={backdrop} alt="" widths={[800, 1285]} sizes="100vw" loading="eager" fetchpriority="high" />
+    <div class="wrap hero__inner">
+      <h1 class="hero__logo" aria-label="bedware software">
+        <span class="hero__logo--dark" set:html={mark} />
+        <span class="hero__logo--light" set:html={svg(lightPlates)} />
+      </h1>
+      <p class="hero__lead">Keyboard-first tools for people who live on the desktop. Open source, free, and built by one developer.</p>
+      <div class="hero__apps">
+        {apps.map((a) => (
+          <a class="hero__app" href={`#${a.slug}`}>
+            <Image src={a.icon} alt="" width={40} height={40} />
+            <span><b>{a.name}</b><small>{a.kicker}</small></span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  {apps.map((a, i) => {
+    const first = a.features.find((f) => f.image === a.homeShot) ?? a.features[0];
+    return (
+      <section class="product" id={a.slug} aria-labelledby={`${a.slug}-title`}>
+        <div class="wrap">
+          <header class="bw-pagehead product__head" data-n={pad(i + 1)}>
+            <div class="bw-pagehead__main">
+              <h2 class="bw-pagehead__title" id={`${a.slug}-title`}>{a.name}</h2>
+              <p class="bw-pagehead__desc">{a.kicker}</p>
+            </div>
+            <div class="bw-pagehead__side">
+              <a class="bw-btn bw-btn--ghost" href={`/${a.slug}/`}>Feature tour →</a>
+            </div>
+          </header>
+          <div class="product__grid">
+            <div class="product__text">
+              <div class="product__brand">
+                <Image src={a.icon} alt="" width={56} height={56} />
+                <span class="product__name product__name--dark" set:html={svg(a.logo)} aria-hidden="true" />
+                <span class="product__name product__name--light" set:html={svg(a.logoLight)} aria-hidden="true" />
+              </div>
+              <p class="product__intro" set:html={a.intro[0]} />
+              {a.highlights.length > 0 && (
+                <ul class="ticks">{a.highlights.map((h) => <li set:html={h} />)}</ul>
+              )}
+              <Downloads app={a} compact />
+            </div>
+            <div class="product__media">
+              {first ? (
+                <Shot src={a.shots[first.image]} light={a.shots[`light/${first.image}`]} alt={first.alt} sizes="(min-width: 960px) 620px, 100vw" />
+              ) : (
+                <div class="product__placeholder" data-theme="dark">
+                  <Image src={a.icon} alt="" width={160} height={160} />
+                </div>
+              )}
+            </div>
+          </div>
+          {a.features.length > 1 && (
+            <ul class="product__more" aria-label={`More in ${a.name}`}>
+              {a.features.filter((f) => f !== first).map((f) => (
+                <li><a href={`/${a.slug}/#${f.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}>{f.title}</a></li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
+    );
+  })}
+
+  <section class="principles" aria-labelledby="how">
+    <div class="wrap">
+      <h2 class="bw-section-title__text section-h" id="how">How they are made</h2>
+      <ol class="principles__list">
+        {principles.map((p, i) => (
+          <li class="principle">
+            <span class="bw-tag">{pad(i + 1)}</span>
+            <h3>{p.t}</h3>
+            <p>{p.d}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <section class="about" data-theme="dark" aria-labelledby="about">
+    <div class="wrap about__grid">
+      <Image class="about__robot" src={robot} alt="The bedware robot: a winged mech in black armour with yellow plates" widths={[400, 720]} sizes="(min-width: 860px) 360px, 70vw" />
+      <div class="about__text">
+        <h2 class="section-h bw-section-title__text" id="about">About <span class="lc">bedware.software</span></h2>
+        <p>bedware software is a one-person studio. Each tool started as a fix for something that slowed down my own day: too many windows, too many tabs, too many trips to the mouse.</p>
+        <p>The apps are released often, in small steps, and everything happens in the open. Found a bug or missing a feature? Open an issue on GitHub.</p>
+        <div class="about__links">
+          <a class="bw-btn bw-btn--primary" href="https://github.com/bedware-software">bedware-software on GitHub</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>

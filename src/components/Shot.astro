@@ -1,0 +1,21 @@
+---
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+// A screenshot that opens full size. With `light`, the light-theme frame is shown
+// whenever the page is in the light theme (chosen or from the system).
+interface Props { src: ImageMetadata; light?: ImageMetadata; alt: string; sizes: string; eager?: boolean; class?: string }
+const { src, light, alt, sizes, eager = false, class: cls } = Astro.props;
+// Retina screenshots: never upscale, and keep a full-size copy for the zoom view.
+const widths = (img: ImageMetadata) => [480, 800, 1200, 1600, 2400].filter((w) => w < img.width).concat(img.width);
+const frames = light ? [[src, 'shot--dark'], [light, 'shot--light']] as const : [[src, '']] as const;
+---
+{frames.map(([img, theme]) => {
+  // Only the dark frame (the default theme) loads eagerly; a hidden lazy image is never fetched.
+  const now = eager && theme !== 'shot--light';
+  return (
+  <a class:list={['shot', theme, cls]} href={img.src} data-zoom aria-label={`Enlarge: ${alt}`}>
+    <Image src={img} alt={alt} widths={widths(img)} sizes={sizes} format="webp" quality={88}
+      loading={now ? 'eager' : 'lazy'} fetchpriority={now ? 'high' : 'auto'} />
+  </a>
+  );
+})}

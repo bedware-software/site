@@ -1,0 +1,42 @@
+---
+import { formatDate, formatSize, type App } from '../lib/apps';
+interface Props { app: App; compact?: boolean }
+const { app, compact = false } = Astro.props;
+const r = app.release;
+---
+{r ? (
+  <div class:list={['dl', { 'dl--compact': compact }]} data-downloads>
+    <div class="dl__main">
+      <a class="bw-btn bw-btn--primary dl__btn" href={r.url} data-primary>
+        <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 1v8M3.5 5.5 7 9l3.5-3.5M1.5 12.5h11" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"/></svg>
+        <span data-label>Download {app.name}</span>
+      </a>
+      <a class="bw-btn bw-btn--secondary dl__btn" href={app.repo}>Source on GitHub</a>
+    </div>
+    <p class="dl__meta">
+      <span class="bw-badge bw-badge--accent">v{r.version}</span>
+      <span>{formatDate(r.date)}</span>
+      <a class="bw-link" href={r.url}>Release notes</a>
+    </p>
+    {r.installers.length > 0 && (
+      <ul class="dl__list" aria-label="All installers" hidden={compact}>
+        {r.installers.map((i) => (
+          <li>
+            <a href={i.url} data-installer={i.id} data-os={i.os}>
+              <span class="dl__os">{i.os}</span>
+              <span class="dl__kind">{i.kind}</span>
+              <span class="dl__size">{formatSize(i.size)}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+) : (
+  <div class="dl">
+    <div class="dl__main">
+      <a class="bw-btn bw-btn--primary dl__btn" href={`${app.repo}/releases`}>Releases</a>
+      <a class="bw-btn bw-btn--secondary dl__btn" href={app.repo}>Source on GitHub</a>
+    </div>
+  </div>
+)}

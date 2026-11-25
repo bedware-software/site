@@ -1,0 +1,66 @@
+---
+// Development only: switch the options of the open design questions and copy the answer.
+import { questions, reviewing } from '../lib/review';
+const here = Astro.url.pathname;
+---
+{reviewing && questions.length > 0 && (
+  <aside class="review" data-theme="dark" aria-label="Варианты на выбор">
+    <div class="review__qs">
+      {questions.map((q) => (
+        <div class="review__q" data-q={q.id} data-here={String(q.page === here || q.page === '*')}>
+          <span class="review__label">
+            {q.page === here || q.page === '*' ? q.label : <a href={q.page}>{q.label} ↗</a>}{q.note && <em class="review__note"> · {q.note}</em>}
+          </span>
+          <div class="bw-seg bw-seg--sm" role="radiogroup" aria-label={q.label}>
+            {Object.entries(q.options).map(([k, v]) => (
+              <button class="bw-seg__opt" type="button" role="radio" aria-checked="false" data-opt={k} title={v}>{k}</button>
+            ))}
+          </div>
+          <span class="review__desc" data-desc></span>
+        </div>
+      ))}
+    </div>
+    <div class="review__out">
+      <code data-answer></code>
+      <span class="review__left" data-left></span>
+      <button class="bw-btn bw-btn--primary bw-btn--sm" type="button" data-copy>Скопировать</button>
+    </div>
+  </aside>
+)}
+
+<script>
+  import { questions } from '../lib/review';
+  const bar = document.querySelector<HTMLElement>('.review');
+  if (bar) {
+    const KEY = 'bw-review';
+    let picks: Record<string, string> = {};
+    try { picks = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch {}
+    const save = () => { try { localStorage.setItem(KEY, JSON.stringify(picks)); } catch {} };
+
+    const render = () => {
+      for (const q of questions) {
+        const shown = picks[q.id] ?? q.current;
+        for (const el of document.querySelectorAll<HTMLElement>(`[data-alt="${q.id}"]`)) el.classList.toggle('is-on', el.dataset.opt === shown);
+        const row = bar.querySelector<HTMLElement>(`[data-q="${q.id}"]`)!;
+        for (const b of row.querySelectorAll<HTMLButtonElement>('[data-opt]')) b.setAttribute('aria-checked', String(b.dataset.opt === picks[q.id]));
+        row.querySelector('[data-desc]')!.textContent = picks[q.id] ? q.options[picks[q.id]] : 'не выбрано';
+      }
+      const done = questions.filter((q) => picks[q.id]);
+      bar.querySelector('[data-answer]')!.textContent = done.length ? done.map((q) => `${q.label}: ${picks[q.id]}`).join('; ') : '—';
+      const left = questions.length - done.length;
+      bar.querySelector('[data-left]')!.textContent = left ? `осталось выбрать: ${left}` : 'всё выбрано';
+    };
+
+    bar.addEventListener('click', (e) => {
+      const b = (e.target as Element).closest<HTMLButtonElement>('button[data-opt]');
+      if (b) { picks[b.closest<HTMLElement>('[data-q]')!.dataset.q!] = b.dataset.opt!; save(); render(); }
+    });
+    bar.querySelector('[data-copy]')!.addEventListener('click', async (e) => {
+      const btn = e.currentTarget as HTMLButtonElement;
+      try { await navigator.clipboard.writeText(bar.querySelector('[data-answer]')!.textContent!); btn.textContent = 'Скопировано'; }
+      catch { btn.textContent = 'Не удалось'; }
+      setTimeout(() => { btn.textContent = 'Скопировать'; }, 1500);
+    });
+    render();
+  }
+</script>
