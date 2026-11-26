@@ -1,0 +1,24 @@
+name: Deploy bedware.software
+# Coolify builds the site from this repository but is not told about pushes
+# (no GitHub App), so every push to main asks it to rebuild.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions: {}
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Request site build
+        env:
+          DEPLOY_URL: ${{ secrets.COOLIFY_SITE_DEPLOY_URL }}
+          DEPLOY_TOKEN: ${{ secrets.COOLIFY_SITE_TOKEN }}
+        run: |
+          if [ -z "$DEPLOY_URL" ] || [ -z "$DEPLOY_TOKEN" ]; then
+            echo "::notice::Site deployment is not configured."
+            exit 0
+          fi
+          # Coolify accepts a deploy request only as POST (a GET gets 405).
+          curl --fail --silent --show-error --max-time 30 --output /dev/null --request POST \
+            --header "Authorization: Bearer $DEPLOY_TOKEN" "$DEPLOY_URL"

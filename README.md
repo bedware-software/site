@@ -10,7 +10,7 @@ the `@bedware/ui` package (tokens and `bw-*` classes) from
 
 ## Run it
 
-Node 22 or newer.
+Node 22.23.4 or newer (what Astro 7 requires).
 
 ```bash
 npm ci
@@ -72,10 +72,14 @@ The site is deployed with [Coolify](https://coolify.io) as a static site:
 - install: `npm ci`
 - build: `npm run build`
 - publish directory: `dist`
+- build pack: Nixpacks, static, with `NIXPACKS_NODE_VERSION=24` (its Node 22 is too old for Astro)
+- domains: `https://bedware.software`, and `https://www.bedware.software` redirecting to it
 
-Each app repository has a `Refresh bedware.software` workflow. It asks Coolify to rebuild the site when the README or screenshots change on `main`, after a successful build of the distributables, and when a release is published. The workflow needs two repository secrets:
+A push to `main` of this repository runs `.github/workflows/deploy.yml`, which asks Coolify to rebuild the site.
+
+Each app repository has a `Refresh bedware.software` workflow. It asks Coolify to rebuild the site when the README or screenshots change on `main`, after a successful build of the distributables, and when a release is published. Both workflows can also be started by hand (Actions → Run workflow). They need two repository secrets, set in this repository and in both app repositories:
 
 - `COOLIFY_SITE_DEPLOY_URL`: the deploy webhook of the site in Coolify;
-- `COOLIFY_SITE_TOKEN`: a Coolify API token allowed to deploy.
+- `COOLIFY_SITE_TOKEN`: a Coolify API token with the `deploy` permission only (named "GitHub Actions - site deploy" in Coolify).
 
-Without these secrets the workflow does nothing and exits successfully.
+The deploy request must be a POST: Coolify answers a GET with 405. Without the secrets the workflows do nothing and exit successfully.

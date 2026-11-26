@@ -11,7 +11,7 @@
     "brand": "node scripts/brand.mjs"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=22.23.4"
   },
   "dependencies": {
     "@bedware/ui": "https://github.com/bedware-software/bedware-design/releases/download/ui-v0.5.0/bedware-ui-0.5.0.tgz",
